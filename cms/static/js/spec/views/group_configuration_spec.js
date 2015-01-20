@@ -651,9 +651,9 @@ define([
             }
         };
 
-        createGroups = function (groupNames) {
-            var groups = new GroupCollection(_.map(groupNames, function (groupName) {
-                    return {name: groupName};
+        createGroups = function (groupNamesWithId) {
+            var groups = new GroupCollection(_.map(groupNamesWithId, function (groupName, id) {
+                    return {id: id, name: groupName};
                 })),
                 groupConfiguration = new GroupConfigurationModel({
                     id: 0,
@@ -661,11 +661,12 @@ define([
                     groups: groups
                 }, {canBeEmpty: true});
             groupConfiguration.urlRoot = '/mock_url';
+            groupConfiguration.outlineUrl = '/mock_url';
             return groups;
         };
 
-        renderView = function(groupNames) {
-            var view = new GroupList({collection: createGroups(groupNames || [])}).render();
+        renderView = function(groupNamesWithId) {
+            var view = new GroupList({collection: createGroups(groupNamesWithId || {})}).render();
             appendSetFixtures(view.el);
             return view;
         };
@@ -778,7 +779,7 @@ define([
             var requests = AjaxHelpers.requests(this),
                 oldGroupName = 'Old Group Name',
                 newGroupName = 'New Group Name',
-                view = renderView([oldGroupName]);
+                view = renderView({1: oldGroupName});
             editNewGroup(view, {newName: newGroupName, save: true});
             respondToSave(requests, view);
             verifyEditingGroup(view, false, 1);

@@ -6,10 +6,20 @@ define([
     var Group = Backbone.AssociatedModel.extend({
         defaults: function() {
             return {
+                id: '',
                 name: '',
                 version: 1,
-                order: null
-             };
+                order: null,
+                showContentGroupUsages: false,
+                usage: []
+            };
+        },
+        url : function() {
+            return this.collection.parents[0].urlRoot + '/' + encodeURIComponent(this.collection.parents[0].id) + '/' + encodeURIComponent(this.id);
+        },
+
+        reset: function() {
+            this.set(this._originalAttributes, { parse: true });
         },
 
         isEmpty: function() {
@@ -20,7 +30,8 @@ define([
             return {
                 id: this.get('id'),
                 name: this.get('name'),
-                version: this.get('version')
+                version: this.get('version'),
+                usage: this.get('usage')
              };
         },
 

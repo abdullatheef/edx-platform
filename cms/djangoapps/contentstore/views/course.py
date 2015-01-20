@@ -1426,10 +1426,68 @@ class GroupConfiguration(object):
 
             validation_summary = split_test.general_validation_message()
             usage_info[split_test.user_partition_id].append({
-                'label': '{} / {}'.format(unit.display_name, split_test.display_name),
+                'label': u"{} / {}".format(unit.display_name, split_test.display_name),
                 'url': unit_url,
                 'validation': validation_summary.to_json() if validation_summary else None,
             })
+        return usage_info
+
+    @staticmethod
+    def get_content_groups_usage_info(store, course):
+        """
+        Get usage information for content Group Configurations.
+        """
+        modules = store.get_items(course.id, settings={'group_access': {'$exists': True}})
+
+        return GroupConfiguration._get_content_groups_usage_info(store, course, modules)
+
+    @staticmethod
+    def _get_content_groups_usage_info(store, course, modules):
+        """
+        Returns all units names and their urls.
+
+        Returns:
+        {'group_id':
+            [
+                {
+                    'label': 'Unit 1 / Problem 1',
+                    'url': 'url_to_unit_1'
+                },
+                {
+                    'label': 'Unit 2 / Problem 2',
+                    'url': 'url_to_unit_2'
+                }
+            ],
+        }
+        """
+        usage_info = {}
+        for module in modules:
+            if hasattr(module, 'group_access') and module.group_access:
+                (__, group_ids), = module.group_access.items()
+                for group_id in group_ids:
+                    if group_id not in usage_info:
+                        usage_info[group_id] = []
+
+                    unit_location = store.get_parent_location(module.location)
+                    if not unit_location:
+                        log.warning("Parent location of content_groups module not found: %s", module.location)
+                        continue
+
+                    try:
+                        unit = store.get_item(unit_location)
+                    except ItemNotFoundError:
+                        log.warning("Unit not found: %s", unit_location)
+                        continue
+
+                    unit_url = reverse_usage_url(
+                        'container_handler',
+                        course.location.course_key.make_usage_key(unit.location.block_type, unit.location.name)
+                    )
+
+                    usage_info[group_id].append({
+                        'label': u"{} / {}".format(unit.display_name, module.display_name),
+                        'url': unit_url,
+                    })
         return usage_info
 
     @staticmethod
@@ -1439,19 +1497,38 @@ class GroupConfiguration(object):
 
         Returns json of particular group configuration updated with usage information.
         """
-        # Get all Experiments that use particular Group Configuration in course.
-        split_tests = store.get_items(
-            course.id,
-            category='split_test',
-            content={'user_partition_id': configuration.id}
-        )
-        configuration_json = configuration.to_json()
-        usage_information = GroupConfiguration._get_usage_info(store, course, split_tests)
-        configuration_json['usage'] = usage_information.get(configuration.id, [])
+        # Get all Experiments that use particular  Group Configuration in course.
+        if configuration.scheme.name == 'random':
+            split_tests = store.get_items(
+                course.id,
+                category='split_test',
+                content={'user_partition_id': configuration.id}
+            )
+            configuration_json = configuration.to_json()
+            usage_information = GroupConfiguration._get_usage_info(store, course, split_tests)
+            configuration_json['usage'] = usage_information.get(configuration.id, [])
+        else:
+            # In case if scheme is "cohort"
+            configuration_json = GroupConfiguration.update_content_group_usage_info(store, course, configuration)
         return configuration_json
 
     @staticmethod
-    def get_or_create_content_group_configuration(course):
+    def update_content_group_usage_info(store, course, configuration):
+        """
+        Update usage information for particular Content Group Configuration.
+
+        Returns json of particular content group configuration updated with usage information.
+        """
+        usage_info = GroupConfiguration.get_content_groups_usage_info(store, course)
+        content_group_configuration = configuration.to_json()
+
+        for group in content_group_configuration['groups']:
+            group['usage'] = usage_info.get(group['id'], [])
+
+        return content_group_configuration
+
+    @staticmethod
+    def get_or_create_content_group_configuration_with_usage(store, course):
         """
         Returns the first user partition from the course which uses the
         CohortPartitionScheme, or generates one if no such partition is
@@ -1468,7 +1545,25 @@ class GroupConfiguration(object):
                 groups=[],
                 scheme_id='cohort'
             )
+        content_group_configuration = GroupConfiguration.update_content_group_usage_info(
+            store,
+            course,
+            content_group_configuration
+        )
         return content_group_configuration
+
+    @staticmethod
+    def remove_content_group_from_configuration(configuration, group_id):
+        """
+        Removes the content group from specific Group Configuration based on the group_id.
+        """
+        matching_groups = [group for group in configuration.groups if group.id == group_id]
+        if not matching_groups:
+            return None
+
+        group_index = configuration.groups.index(matching_groups[0])
+        configuration.groups.pop(group_index)
+        return configuration
 
 
 @require_http_methods(("GET", "POST"))
@@ -1496,9 +1591,11 @@ def group_configurations_list_handler(request, course_key_string):
                 experiment_group_configurations = GroupConfiguration.get_split_test_partitions_with_usage(course, store)
             else:
                 experiment_group_configurations = None
-            content_group_configuration = GroupConfiguration.get_or_create_content_group_configuration(
-                course
-            ).to_json()
+
+            content_group_configuration = GroupConfiguration.get_or_create_content_group_configuration_with_usage(
+                store, course
+            )
+
             return render_to_response('group_configurations.html', {
                 'context_course': course,
                 'group_configuration_url': group_configuration_url,
@@ -1532,7 +1629,7 @@ def group_configurations_list_handler(request, course_key_string):
 @login_required
 @ensure_csrf_cookie
 @require_http_methods(("POST", "PUT", "DELETE"))
-def group_configurations_detail_handler(request, course_key_string, group_configuration_id):
+def group_configurations_detail_handler(request, course_key_string, group_configuration_id, group_id=None):
     """
     JSON API endpoint for manipulating a group configuration via its internal ID.
     Used by the Backbone application.
@@ -1566,20 +1663,42 @@ def group_configurations_detail_handler(request, course_key_string, group_config
             store.update_item(course, request.user.id)
             configuration = GroupConfiguration.update_usage_info(store, course, new_configuration)
             return JsonResponse(configuration, status=201)
+
         elif request.method == "DELETE":
             if not configuration:
                 return JsonResponse(status=404)
 
             # Verify that group configuration is not already in use.
-            usages = GroupConfiguration.get_usage_info(course, store)
-            if usages.get(int(group_configuration_id)):
-                return JsonResponse(
-                    {"error": _("This Group Configuration is already in use and cannot be removed.")},
-                    status=400
-                )
-
             index = course.user_partitions.index(configuration)
-            course.user_partitions.pop(index)
+            if configuration.scheme.name == 'random':
+                usages = GroupConfiguration.get_usage_info(course, store)
+                used = True if usages.get(int(group_configuration_id)) else False
+
+                if used:
+                    return JsonResponse(
+                        {"error": _("This group configuration is in use and cannot be deleted.")},
+                        status=400
+                    )
+                course.user_partitions.pop(index)
+            else:
+                if not group_id:
+                    return JsonResponse(status=404)
+
+                group_id = int(group_id)
+                usages = GroupConfiguration.get_content_groups_usage_info(store, course)
+                used = True if usages.get(group_id) else False
+
+                if used:
+                    return JsonResponse(
+                        {"error": _("This content group is in use and cannot be deleted.")},
+                        status=400
+                    )
+                configuration = GroupConfiguration.remove_content_group_from_configuration(configuration, group_id)
+                if not configuration:
+                    return JsonResponse(status=404)
+
+                course.user_partitions[index] = configuration
+
             store.update_item(course, request.user.id)
             return JsonResponse(status=204)
 

@@ -446,6 +446,45 @@
           margin-bottom: 0;
         }
       }
+
+      .group-configuration-info-inline {
+        display: table;
+        width: 70%;
+        margin: ($baseline/4) 0 ($baseline/2) $baseline;
+
+        li {
+          @include box-sizing(border-box);
+          display: table-cell;
+          margin-right: 1%;
+
+          &.group-configuration-usage-count {
+            font-style: italic;
+          }
+        }
+      }
+
+      .group-configuration-info-block {
+        li {
+          padding: ($baseline/4) 0;
+        }
+      }
+
+      .content-group-edit {
+
+        .group-configuration-id {
+          display: inline-block;
+          width: 45%;
+          text-align: right;
+          vertical-align: top;
+          color: $gray-l1;
+
+          .group-configuration-value {
+            @extend %t-strong;
+            white-space: nowrap;
+            margin-left: ($baseline*0.5);
+          }
+        }
+      }
     }
 
     .experiment-groups {

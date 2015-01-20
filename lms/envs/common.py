@@ -357,7 +357,7 @@ sys.path.append(REPO_ROOT)
 sys.path.append(PROJECT_ROOT / 'djangoapps')
 sys.path.append(COMMON_ROOT / 'djangoapps')
 sys.path.append(COMMON_ROOT / 'lib')
-
+sys.path.insert(1, '/edx/app/edxapp/lib/ora2')
 # For Node.js
 
 system_node_path = os.environ.get("NODE_PATH", REPO_ROOT / 'node_modules')
