@@ -2441,6 +2441,45 @@ class TestEntranceExamInstructorAPIRegradeTask(ModuleStoreTestCase, LoginEnrollm
         })
         self.assertEqual(response.status_code, 400)
 
+    def test_list_entrance_exam_instructor_tasks_student(self):
+        """ Test list task history for entrance exam AND student. """
+        # create a re-score entrance exam task
+        url = reverse('rescore_entrance_exam', kwargs={'course_id': unicode(self.course.id)})
+        response = self.client.get(url, {
+            'unique_student_identifier': self.student.email,
+        })
+        self.assertEqual(response.status_code, 200)
+
+        url = reverse('list_entrance_exam_instructor_tasks', kwargs={'course_id': unicode(self.course.id)})
+        response = self.client.get(url, {
+            'unique_student_identifier': self.student.email,
+        })
+        self.assertEqual(response.status_code, 200)
+
+        # check response
+        tasks = json.loads(response.content)['tasks']
+        self.assertEqual(len(tasks), 1)
+
+    def test_list_entrance_exam_instructor_tasks_all_student(self):
+        """ Test list task history for entrance exam AND all student. """
+        url = reverse('list_entrance_exam_instructor_tasks', kwargs={'course_id': unicode(self.course.id)})
+        response = self.client.get(url, {})
+        self.assertEqual(response.status_code, 200)
+
+        # check response
+        tasks = json.loads(response.content)['tasks']
+        self.assertEqual(len(tasks), 0)
+
+    def test_list_entrance_exam_instructor_with_invalid_exam_key(self):
+        """ Test list task history for entrance exam failure if course has invalid exam. """
+        url = reverse('list_entrance_exam_instructor_tasks',
+                      kwargs={'course_id': unicode(self.course_with_invalid_ee.id)})
+        response = self.client.get(url, {
+            'unique_student_identifier': self.student.email,
+        })
+        self.assertEqual(response.status_code, 400)
+
+
 
 @override_settings(MODULESTORE=TEST_DATA_MOCK_MODULESTORE)
 @patch('bulk_email.models.html_to_text', Mock(return_value='Mocking CourseEmail.text_message'))
@@ -2575,14 +2614,8 @@ class TestInstructorAPITaskLists(ModuleStoreTestCase, LoginEnrollmentTestCase):
             return attr_dict
 
     def setUp(self):
-        self.course = CourseFactory.create(
-            entrance_exam_id='i4x://{}/{}/chapter/Entrance_exam'.format('test_org', 'test_course')
-        )
+        self.course = CourseFactory.create()
         self.instructor = InstructorFactory(course_key=self.course.id)
-        self.course_with_invalid_ee = CourseFactory.create(entrance_exam_id='invalid_exam')
-        # Add instructor to invalid ee course
-        CourseInstructorRole(self.course_with_invalid_ee.id).add_users(self.instructor)
-
         self.client.login(username=self.instructor.username, password='test')
 
         self.student = UserFactory()
@@ -2691,57 +2724,6 @@ class TestInstructorAPITaskLists(ModuleStoreTestCase, LoginEnrollmentTestCase):
             self.assertDictEqual(exp_task, act_task)
 
         self.assertEqual(actual_tasks, expected_tasks)
-
-    @patch.object(instructor_task.api, 'get_entrance_exam_instructor_task_history')
-    def test_list_entrance_exam_instructor_tasks_student(self, act):
-        """ Test list task history for entrance exam AND student. """
-        act.return_value = self.tasks
-        url = reverse('list_entrance_exam_instructor_tasks', kwargs={'course_id': unicode(self.course.id)})
-        mock_factory = MockCompletionInfo()
-        with patch('instructor.views.instructor_task_helpers.get_task_completion_info') as mock_completion_info:
-            mock_completion_info.side_effect = mock_factory.mock_get_task_completion_info
-            response = self.client.get(url, {
-                'unique_student_identifier': self.student.email,
-            })
-        self.assertEqual(response.status_code, 200)
-
-        # check response
-        self.assertTrue(act.called)
-        expected_tasks = [ftask.to_dict() for ftask in self.tasks]
-        actual_tasks = json.loads(response.content)['tasks']
-        for exp_task, act_task in zip(expected_tasks, actual_tasks):
-            self.assertDictEqual(exp_task, act_task)
-
-        self.assertEqual(actual_tasks, expected_tasks)
-
-    @patch.object(instructor_task.api, 'get_entrance_exam_instructor_task_history')
-    def test_list_entrance_exam_instructor_tasks_all_student(self, act):
-        """ Test list task history for entrance exam AND all student. """
-        act.return_value = self.tasks
-        url = reverse('list_entrance_exam_instructor_tasks', kwargs={'course_id': unicode(self.course.id)})
-        mock_factory = MockCompletionInfo()
-        with patch('instructor.views.instructor_task_helpers.get_task_completion_info') as mock_completion_info:
-            mock_completion_info.side_effect = mock_factory.mock_get_task_completion_info
-            response = self.client.get(url, {})
-        self.assertEqual(response.status_code, 200)
-
-        # check response
-        self.assertTrue(act.called)
-        expected_tasks = [ftask.to_dict() for ftask in self.tasks]
-        actual_tasks = json.loads(response.content)['tasks']
-        for exp_task, act_task in zip(expected_tasks, actual_tasks):
-            self.assertDictEqual(exp_task, act_task)
-
-        self.assertEqual(actual_tasks, expected_tasks)
-
-    def test_list_entrance_exam_instructor_with_invalid_exam_key(self):
-        """ Test list task history for entrance exam failure if course has invalid exam. """
-        url = reverse('list_entrance_exam_instructor_tasks',
-                      kwargs={'course_id': unicode(self.course_with_invalid_ee.id)})
-        response = self.client.get(url, {
-            'unique_student_identifier': self.student.email,
-        })
-        self.assertEqual(response.status_code, 400)
 
 
 @override_settings(MODULESTORE=TEST_DATA_MOCK_MODULESTORE)
