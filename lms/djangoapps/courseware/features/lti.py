@@ -45,7 +45,7 @@ def check_lti_iframe_content(text):
 @step('I view the LTI and it is rendered in (.*)$')
 def lti_is_rendered(_step, rendered_in):
     if rendered_in.strip() == 'iframe':
-        assert world.is_css_present('iframe', wait_time=2)
+        assert world.is_css_present('iframe', wait_time=4)
         assert not world.is_css_present('.link_lti_new_window', wait_time=0)
         assert not world.is_css_present('.error_message', wait_time=0)
 
@@ -372,7 +372,9 @@ def get_lti_frame_name():
 
 @step('I see in iframe that LTI role is (.*)$')
 def check_role(_step, role):
-    world.is_css_present('iframe')
+    #from nose.tools import set_trace
+    #set_trace()
+    world.wait_for_present('iframe')
     location = world.scenario_dict['LTI'].location.html_id()
     iframe_name = 'ltiFrame-' + location
     with world.browser.get_iframe(iframe_name) as iframe:
