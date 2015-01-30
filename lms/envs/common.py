@@ -323,6 +323,9 @@ FEATURES = {
     # Milestones application flag
     'MILESTONES_APP': False,
 
+    # edx_notifications application feature flag
+    'NOTIFICATIONS_ENABLED': False,
+
     # Prerequisite courses feature flag
     'ENABLE_PREREQUISITE_COURSES': False,
 
@@ -1941,6 +1944,9 @@ OPTIONAL_APPS = (
 
     # milestones
     'milestones',
+
+    # edx_notifications
+    'edx_notifications',
 )
 
 for app_name in OPTIONAL_APPS:
@@ -1955,6 +1961,40 @@ for app_name in OPTIONAL_APPS:
         except ImportError:
             continue
     INSTALLED_APPS += (app_name,)
+
+NOTIFICATION_STORE_PROVIDER = {
+    "class": "edx_notifications.stores.sql.store_provider.SQLNotificationStoreProvider",
+    "options": {
+    }
+}
+
+# This setting already exists in the LMS, please
+# update it
+# SOUTH_MIGRATION_MODULES = {
+#     'djcelery': 'ignore',
+#     'edx_notifications': 'edx_notifications.stores.sql.migrations',
+# }
+
+# to prevent run-away queries from happening
+MAX_NOTIFICATION_LIST_SIZE = 100
+
+SOUTH_MIGRATION_MODULES = {
+    'djcelery': 'ignore',
+    'edx_notifications': 'edx_notifications.stores.sql.migrations',
+}
+
+# list all known channel providers
+NOTIFICATION_CHANNEL_PROVIDERS = {
+    'durable': {
+        'class': 'edx_notifications.channels.durable.BaseDurableNotificationChannel',
+        'options': {}
+    }
+}
+
+# list all of the mappings of notification types to channel
+NOTIFICATION_CHANNEL_PROVIDER_TYPE_MAPS = {
+    '*': 'durable',  # default global mapping
+}
 
 # Stub for third_party_auth options.
 # See common/djangoapps/third_party_auth/settings.py for configuration details.
