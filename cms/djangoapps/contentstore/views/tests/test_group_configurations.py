@@ -87,7 +87,7 @@ class HelperMethods(object):
         self.save_course()
         return (vertical, split_test)
 
-    def _create_problem_with_content_group(self, cid, group_id, name_suffix=''):
+    def _create_problem_with_content_group(self, cid, group_id, name_suffix='', special_characters=''):
         """
         Create a problem
         Assign content group to the problem.
@@ -95,13 +95,13 @@ class HelperMethods(object):
         vertical = ItemFactory.create(
             category='vertical',
             parent_location=self.course.location,
-            display_name='Test Unit {}'.format(name_suffix)
+            display_name="Test Unit {}".format(name_suffix)
         )
 
         problem = ItemFactory.create(
             category='problem',
             parent_location=vertical.location,
-            display_name='Test Problem {}'.format(name_suffix)
+            display_name=u"Test Problem {}{}".format(name_suffix, special_characters)
         )
 
         group_access_content = {'group_access': {cid: [group_id]}}
@@ -623,13 +623,13 @@ class GroupConfigurationsUsageInfoTestCase(CourseTestCase, HelperMethods):
         Test if content group json updated successfully with usage information.
         """
         self._add_user_partitions(count=1, scheme_id='cohort')
-        vertical, __ = self._create_problem_with_content_group(cid=0, group_id=1, name_suffix='0')
+        vertical, __ = self._create_problem_with_content_group(cid=0, group_id=1, name_suffix='0', special_characters=u"JOSÉ ANDRÉS")
 
         actual = GroupConfiguration.get_or_create_content_group_configuration_with_usage(self.store, self.course)
-
+        self.maxDiff = None
         expected = {
             'id': 0,
-            'name': u"Science and Cooking Chef Profile: JOSÉ ANDRÉS",
+            'name': "Name 0",
             'scheme': 'cohort',
             'description': 'Description 0',
             'version': UserPartition.VERSION,
@@ -641,8 +641,8 @@ class GroupConfigurationsUsageInfoTestCase(CourseTestCase, HelperMethods):
                     'id': 1, 'name': 'Group B', 'version': 1,
                     'usage': [
                         {
-                            'url': '/container/{}'.format(vertical.location),
-                            'label': 'Test Unit 0 / Test Problem 0'
+                            'url': u"/container/{}".format(vertical.location),
+                            'label': u"Test Unit 0 / Test Problem 0JOSÉ ANDRÉS"
                         }
                     ]
                 },

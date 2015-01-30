@@ -1545,6 +1545,8 @@ class GroupConfiguration(object):
                 groups=[],
                 scheme_id='cohort'
             )
+            return content_group_configuration.to_json()
+
         content_group_configuration = GroupConfiguration.update_content_group_usage_info(
             store,
             course,

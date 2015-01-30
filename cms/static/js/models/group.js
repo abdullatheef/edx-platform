@@ -6,7 +6,6 @@ define([
     var Group = Backbone.AssociatedModel.extend({
         defaults: function() {
             return {
-                id: '',
                 name: '',
                 version: 1,
                 order: null,
