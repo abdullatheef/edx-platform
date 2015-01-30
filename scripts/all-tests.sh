@@ -128,16 +128,12 @@ END
     "unit")
         case "$SHARD" in        
             "lms")
-                paver test_system -s lms
+                paver test_system -s lms --cov_args="-p"
                 ;;
-            "cms")
-                paver test_system -s cms
-                ;;
-            "js")
+            "other")
+                paver test_system -s cms --cov_args="-p"
                 paver test_js
-                ;;
-            "common")
-                paver test_lib
+                paver test_lib --cov_args="-p"
                 ;;
             *)
                 paver test
@@ -145,7 +141,7 @@ END
                 ;;
         esac
         ;;
-        
+
     "lms-acceptance")
         case "$SHARD" in
 
