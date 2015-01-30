@@ -626,7 +626,6 @@ class GroupConfigurationsUsageInfoTestCase(CourseTestCase, HelperMethods):
         vertical, __ = self._create_problem_with_content_group(cid=0, group_id=1, name_suffix='0', special_characters=u"JOSÉ ANDRÉS")
 
         actual = GroupConfiguration.get_or_create_content_group_configuration_with_usage(self.store, self.course)
-        self.maxDiff = None
         expected = {
             'id': 0,
             'name': "Name 0",
