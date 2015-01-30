@@ -2,6 +2,7 @@
 import datetime
 import os
 import pytz
+import time
 from django.conf import settings
 from mock import patch
 from pytz import UTC
@@ -45,7 +46,8 @@ def check_lti_iframe_content(text):
 @step('I view the LTI and it is rendered in (.*)$')
 def lti_is_rendered(_step, rendered_in):
     if rendered_in.strip() == 'iframe':
-        assert world.is_css_present('iframe', wait_time=4)
+        world.wait_for_present('iframe')
+        #assert world.is_css_present('iframe', wait_time=4)
         assert not world.is_css_present('.link_lti_new_window', wait_time=0)
         assert not world.is_css_present('.error_message', wait_time=0)
 
@@ -58,7 +60,7 @@ def lti_is_rendered(_step, rendered_in):
         assert world.is_css_present('.link_lti_new_window', wait_time=0)
         assert not world.is_css_present('.error_message', wait_time=0)
         click_and_check_lti_popup()
-    else:  # incorrent rendered_in parameter
+    else:  # incorrect rendered_in parameter
         assert False
 
 
@@ -385,6 +387,7 @@ def check_role(_step, role):
             ignored_exceptions=ElementDoesNotExist
         )
         assert_equal(expected_role, role)
+        time.sleep(3)
 
 
 @step('I switch to (.*)$')
@@ -392,7 +395,10 @@ def switch_view(_step, view):
     staff_status = world.css_find('#action-preview-select').first.value
     if staff_status != view:
         world.browser.select("select", view)
+        #from nose.tools import set_trace
+        #set_trace()
         world.wait_for_ajax_complete()
+        time.sleep(3)
 
 
 @step("in the LTI component I do not see (.*)$")
