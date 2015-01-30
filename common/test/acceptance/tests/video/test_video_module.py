@@ -232,7 +232,7 @@ class YouTubeVideoTest(VideoBaseTest):
         Then I see the correct english text in the captions
         """
         self._install_course_fixture()
-        self.course_fixture.add_asset(['subs_OEoXaMPEzfM.srt.sjson'])
+        self.course_fixture.add_asset(['subs_3_yD_cEKoCk.srt.sjson'])
         self.course_fixture._upload_assets()
         self._navigate_to_courseware_video_and_render()
         self.video.show_captions()
@@ -294,8 +294,8 @@ class YouTubeVideoTest(VideoBaseTest):
         And I see the correct non-english text in the captions
         And the non-english transcript downloads correctly
         """
-        self.assets.extend(['chinese_transcripts.srt', 'subs_OEoXaMPEzfM.srt.sjson'])
-        data = {'download_track': True, 'transcripts': {'zh': 'chinese_transcripts.srt'}, 'sub': 'OEoXaMPEzfM'}
+        self.assets.extend(['chinese_transcripts.srt', 'subs_3_yD_cEKoCk.srt.sjson'])
+        data = {'download_track': True, 'transcripts': {'zh': 'chinese_transcripts.srt'}, 'sub': '3_yD_cEKoCk'}
         self.metadata = self.metadata_for_mode('youtube', additional_data=data)
 
         # go to video
@@ -328,8 +328,8 @@ class YouTubeVideoTest(VideoBaseTest):
         Then the video with the transcript enabled is aligned correctly
         And the video with the transcript hidden is aligned correctly
         """
-        self.assets.append('subs_OEoXaMPEzfM.srt.sjson')
-        data = {'sub': 'OEoXaMPEzfM'}
+        self.assets.append('subs_3_yD_cEKoCk.srt.sjson')
+        data = {'sub': '3_yD_cEKoCk'}
         self.metadata = self.metadata_for_mode('youtube', additional_data=data)
 
         # go to video
@@ -411,9 +411,9 @@ class YouTubeVideoTest(VideoBaseTest):
         And the Download Transcript menu does not exist for Video C
         """
 
-        data_a = {'sub': 'OEoXaMPEzfM', 'download_track': True}
+        data_a = {'sub': '3_yD_cEKoCk', 'download_track': True}
         youtube_a_metadata = self.metadata_for_mode('youtube', additional_data=data_a)
-        self.assets.append('subs_OEoXaMPEzfM.srt.sjson')
+        self.assets.append('subs_3_yD_cEKoCk.srt.sjson')
 
         data_b = {'youtube_id_1_0': 'b7xgknqkQk8', 'sub': 'b7xgknqkQk8', 'download_track': True}
         youtube_b_metadata = self.metadata_for_mode('youtube', additional_data=data_b)
@@ -471,8 +471,8 @@ class YouTubeVideoTest(VideoBaseTest):
         And I select language with code "en"
         Then I see "Hi, welcome to Edx." text in the captions
         """
-        self.assets.extend(['chinese_transcripts.srt', 'subs_OEoXaMPEzfM.srt.sjson'])
-        data = {'transcripts': {"zh": "chinese_transcripts.srt"}, 'sub': 'OEoXaMPEzfM'}
+        self.assets.extend(['chinese_transcripts.srt', 'subs_3_yD_cEKoCk.srt.sjson'])
+        data = {'transcripts': {"zh": "chinese_transcripts.srt"}, 'sub': '3_yD_cEKoCk'}
         self.metadata = self.metadata_for_mode('youtube', additional_data=data)
 
         # go to video
@@ -599,8 +599,8 @@ class YouTubeVideoTest(VideoBaseTest):
         And I see duration "1:56"
 
         """
-        self.assets.extend(['subs_OEoXaMPEzfM.srt.sjson', 'subs_b7xgknqkQk8.srt.sjson'])
-        data = {'sub': 'OEoXaMPEzfM', 'youtube_id_1_5': 'b7xgknqkQk8'}
+        self.assets.extend(['subs_3_yD_cEKoCk.srt.sjson', 'subs_b7xgknqkQk8.srt.sjson'])
+        data = {'sub': '3_yD_cEKoCk', 'youtube_id_1_5': 'b7xgknqkQk8'}
         self.metadata = self.metadata_for_mode('youtube', additional_data=data)
 
         # go to video
@@ -773,8 +773,8 @@ class Html5VideoTest(VideoBaseTest):
         And I see the correct non-english text in the captions
         And the non-english transcript downloads correctly
         """
-        self.assets.extend(['chinese_transcripts.srt', 'subs_OEoXaMPEzfM.srt.sjson'])
-        data = {'download_track': True, 'transcripts': {'zh': 'chinese_transcripts.srt'}, 'sub': 'OEoXaMPEzfM'}
+        self.assets.extend(['chinese_transcripts.srt', 'subs_3_yD_cEKoCk.srt.sjson'])
+        data = {'download_track': True, 'transcripts': {'zh': 'chinese_transcripts.srt'}, 'sub': '3_yD_cEKoCk'}
         self.metadata = self.metadata_for_mode('html5', additional_data=data)
 
         # go to video
@@ -808,8 +808,8 @@ class Html5VideoTest(VideoBaseTest):
         And I view the video at fullscreen
         Then the video with the transcript enabled is aligned correctly
         """
-        self.assets.append('subs_OEoXaMPEzfM.srt.sjson')
-        data = {'sub': 'OEoXaMPEzfM'}
+        self.assets.append('subs_3_yD_cEKoCk.srt.sjson')
+        data = {'sub': '3_yD_cEKoCk'}
         self.metadata = self.metadata_for_mode('html5', additional_data=data)
 
         # go to video
@@ -832,8 +832,8 @@ class Html5VideoTest(VideoBaseTest):
         And I have uploaded an english transcript file to assets
         Then I see the correct text in the captions
         """
-        self.assets.append('subs_OEoXaMPEzfM.srt.sjson')
-        data = {'sub': 'OEoXaMPEzfM'}
+        self.assets.append('subs_3_yD_cEKoCk.srt.sjson')
+        data = {'sub': '3_yD_cEKoCk'}
         self.metadata = self.metadata_for_mode('html5', additional_data=data)
 
         # go to video
