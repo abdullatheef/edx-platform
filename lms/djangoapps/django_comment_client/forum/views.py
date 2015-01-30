@@ -75,17 +75,26 @@ def get_threads(request, course_key, discussion_id=None, per_page=THREADS_PER_PA
     This may raise an appropriate subclass of cc.utils.CommentClientError
     if something goes wrong, or ValueError if the group_id is invalid.
     """
+    course = get_course_with_access(request.user, 'load_forum', course_key)
+
     default_query_params = {
         'page': 1,
         'per_page': per_page,
         'sort_key': 'date',
         'sort_order': 'desc',
         'text': '',
-        'commentable_id': discussion_id,
         'course_id': course_key.to_deprecated_string(),
         'user_id': request.user.id,
         'group_id': get_group_id_for_comments_service(request, course_key, discussion_id),  # may raise ValueError
     }
+
+    discussion_ids = discussion_id
+    if discussion_ids is None:
+        discussion_ids = ','.join(
+            course.top_level_discussion_topic_ids +
+            utils.get_discussion_id_map(course, request.user).keys()
+        )
+    default_query_params['commentable_ids'] = discussion_ids
 
     if not request.GET.get('sort_key'):
         # If the user did not select a sort key, use their last used sort key
