@@ -637,7 +637,7 @@ REASONCODE_MAP.update(
         '234': dedent(_(
             """
             There is a problem with the information in your CyberSource account.  Please let us know at {0}
-            """.format(settings.PAYMENT_SUPPORT_EMAIL))),
+            """).format(settings.PAYMENT_SUPPORT_EMAIL)),
         '236': _('Processor Failure.  Possible fix: retry the payment'),
         '240': dedent(_(
             """
